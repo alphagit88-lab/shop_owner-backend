@@ -17,9 +17,14 @@ const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────
 app.use(express.json());
+
+const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: [allowedOrigin, `${allowedOrigin}/`], // Allow both with and without slash
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 // ── Health check ─────────────────────────────────────────────────
