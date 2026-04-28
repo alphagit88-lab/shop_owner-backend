@@ -38,7 +38,8 @@ export const sendReceiptEmail = async (req: Request, res: Response) => {
     const { email } = req.body;
 
     const receipt = await receiptRepo.findOne({
-      where: { receiptNo: parseInt(no) }
+      where: { receiptNo: parseInt(no) },
+      relations: ["details"]
     });
 
     if (!receipt) return res.status(404).json({ message: "Receipt not found" });

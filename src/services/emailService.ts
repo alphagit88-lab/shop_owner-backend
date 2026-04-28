@@ -4,6 +4,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Create Mailtrap transporter
+console.log("🛠️ Initializing Mailtrap with:", {
+  host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
+  port: Number(process.env.MAILTRAP_PORT) || 2525,
+  user: process.env.MAILTRAP_USER ? "EXISTS" : "MISSING",
+});
+
 const transporter = nodemailer.createTransport({
   host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
   port: Number(process.env.MAILTRAP_PORT) || 2525,
@@ -24,6 +30,8 @@ export const sendEmailWithAttachment = async (
     console.warn("⚠️ Mailtrap credentials missing. Skipping email.");
     return;
   }
+
+  console.log(`📤 Attempting to send email to ${to}...`);
 
   const msg = {
     from: `"${process.env.MAIL_FROM_NAME || "Gem Palace Jewelry"}" <${process.env.MAIL_FROM_EMAIL || "no-reply@example.com"}>`,
