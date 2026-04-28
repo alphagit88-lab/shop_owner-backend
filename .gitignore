@@ -1,4 +1,17 @@
+# Dependencies
 node_modules/
+
+# Build
 dist/
+
+# Environment
 .env
-*.js.map
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
