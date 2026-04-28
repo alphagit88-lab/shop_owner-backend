@@ -4,12 +4,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { AppDataSource } from "./data-source";
 
-// Routes (to be added in Phase 2)
-// import authRoutes      from "./routes/auth";
-// import itemRoutes      from "./routes/items";
-// import customerRoutes  from "./routes/customers";
-// import quotationRoutes from "./routes/quotations";
-// import receiptRoutes   from "./routes/receipts";
+// Routes
+import authRoutes      from "./routes/auth";
+import itemRoutes      from "./routes/items";
+import customerRoutes  from "./routes/customers";
+import quotationRoutes from "./routes/quotations";
+import receiptRoutes   from "./routes/receipts";
 
 dotenv.config();
 
@@ -27,12 +27,12 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// ── Route registration (Phase 2) ──────────────────────────────────
-// app.use("/api/auth",       authRoutes);
-// app.use("/api/items",      itemRoutes);
-// app.use("/api/customers",  customerRoutes);
-// app.use("/api/quotations", quotationRoutes);
-// app.use("/api/receipts",   receiptRoutes);
+// ── Route registration ──────────────────────────────────────────
+app.use("/api/auth",       authRoutes);
+app.use("/api/items",      itemRoutes);
+app.use("/api/customers",  customerRoutes);
+app.use("/api/quotations", quotationRoutes);
+app.use("/api/receipts",   receiptRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────
 app.use((_req, res) => {
