@@ -27,6 +27,17 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
+// ── Root route ──────────────────────────────────────────────────
+app.get("/", (_req, res) => {
+  res.send(`
+    <div style="font-family: sans-serif; padding: 50px; text-align: center;">
+      <h1 style="color: #f59e0b;">💎 Gem Palace Backend</h1>
+      <p>Status: <span style="color: green;">Online</span></p>
+      <p>API is running. Check health at: <a href="/api/health">/api/health</a></p>
+    </div>
+  `);
+});
+
 // ── Health check ─────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
