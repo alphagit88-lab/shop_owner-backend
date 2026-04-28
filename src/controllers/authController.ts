@@ -24,10 +24,12 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    const secret = process.env.JWT_SECRET || "secret";
+    const expiresIn = (process.env.JWT_EXPIRES_IN || "7d") as any;
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET || "secret",
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      secret,
+      { expiresIn }
     );
 
     res.json({

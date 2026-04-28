@@ -39,7 +39,7 @@ export const createItem = async (req: Request, res: Response) => {
 
 export const updateItem = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     let item = await itemRepo.findOneBy({ id: parseInt(id) });
     if (!item) return res.status(404).json({ message: "Item not found" });
 
@@ -53,7 +53,7 @@ export const updateItem = async (req: Request, res: Response) => {
 
 export const deleteItem = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await itemRepo.delete(id);
     res.json({ message: "Item deleted" });
   } catch (error) {
