@@ -20,7 +20,7 @@ export const getAllReceipts = async (req: Request, res: Response) => {
 
 export const getReceipt = async (req: Request, res: Response) => {
   try {
-    const { no } = req.params;
+    const no = req.params.no as string;
     const receipt = await receiptRepo.findOne({
       where: { receiptNo: parseInt(no) },
       relations: ["details", "customer"]
@@ -34,7 +34,7 @@ export const getReceipt = async (req: Request, res: Response) => {
 
 export const sendReceiptEmail = async (req: Request, res: Response) => {
   try {
-    const { no } = req.params;
+    const no = req.params.no as string;
     const { email } = req.body;
 
     const receipt = await receiptRepo.findOne({

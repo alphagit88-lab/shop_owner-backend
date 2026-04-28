@@ -9,6 +9,7 @@ import { generateQuotationPDF } from "../services/pdfService";
 import { sendEmailWithAttachment } from "../services/emailService";
 
 const quotationRepo = AppDataSource.getRepository(QuotationHeader);
+const quotationDetailRepo = AppDataSource.getRepository(QuotationDetail);
 const itemRepo = AppDataSource.getRepository(Item);
 
 export const createQuotation = async (req: Request, res: Response) => {
@@ -59,6 +60,63 @@ export const createQuotation = async (req: Request, res: Response) => {
   }
 };
 
+export const updateQuotation = async (req: Request, res: Response) => {
+  try {
+    const no = req.params.no as string;
+    const { customerId, customerName, details, notes } = req.body;
+
+    const quotation = await quotationRepo.findOne({
+      where: { quotationNo: parseInt(no) },
+      relations: ["details"]
+    });
+
+    if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+    if (quotation.status === "CONVERTED") return res.status(400).json({ message: "Cannot edit a converted quotation" });
+
+    // Delete old details
+    await quotationDetailRepo.delete({ quotationNo: quotation.quotationNo });
+
+    // Update header
+    quotation.customerId = customerId;
+    quotation.customerName = customerName;
+    quotation.notes = notes;
+    quotation.details = [];
+
+    let totalUsd = 0;
+    let totalLkr = 0;
+
+    for (const itemData of details) {
+      const detail = new QuotationDetail();
+      detail.itemId = itemData.itemId;
+      detail.itemCode = itemData.itemCode;
+      detail.itemDescription = itemData.itemDescription;
+      detail.unitPriceUsd = itemData.unitPriceUsd;
+      detail.unitPriceLkr = itemData.unitPriceLkr;
+      detail.discountPct = itemData.discountPct || 0;
+      detail.discountAmountUsd = itemData.discountAmountUsd || 0;
+      detail.discountAmountLkr = itemData.discountAmountLkr || 0;
+      detail.quantity = itemData.quantity || 1;
+
+      detail.lineTotalUsd = (detail.unitPriceUsd - detail.discountAmountUsd) * detail.quantity;
+      detail.lineTotalLkr = (detail.unitPriceLkr - detail.discountAmountLkr) * detail.quantity;
+
+      totalUsd += Number(detail.lineTotalUsd);
+      totalLkr += Number(detail.lineTotalLkr);
+
+      quotation.details.push(detail);
+    }
+
+    quotation.totalUsd = totalUsd;
+    quotation.totalLkr = totalLkr;
+
+    await quotationRepo.save(quotation);
+    res.json(quotation);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating quotation" });
+  }
+};
+
 export const getAllQuotations = async (req: Request, res: Response) => {
   try {
     const quotations = await quotationRepo.find({
@@ -73,7 +131,7 @@ export const getAllQuotations = async (req: Request, res: Response) => {
 
 export const getQuotation = async (req: Request, res: Response) => {
   try {
-    const { no } = req.params;
+    const no = req.params.no as string;
     const quotation = await quotationRepo.findOne({
       where: { quotationNo: parseInt(no) },
       relations: ["details", "customer"]
@@ -87,7 +145,7 @@ export const getQuotation = async (req: Request, res: Response) => {
 
 export const sendQuotationEmail = async (req: Request, res: Response) => {
   try {
-    const { no } = req.params;
+    const no = req.params.no as string;
     const { email } = req.body;
 
     const quotation = await quotationRepo.findOne({
@@ -121,7 +179,7 @@ export const convertToReceipt = async (req: Request, res: Response) => {
   await queryRunner.startTransaction();
 
   try {
-    const { no } = req.params;
+    const no = req.params.no as string;
     const { paymentMethod } = req.body;
 
     const quotation = await quotationRepo.findOne({
