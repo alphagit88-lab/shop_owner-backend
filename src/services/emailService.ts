@@ -1,11 +1,17 @@
-import sgMail from "@sendgrid/mail";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+// Create Mailtrap transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
+  port: Number(process.env.MAILTRAP_PORT) || 2525,
+  auth: {
+    user: process.env.MAILTRAP_USER,
+    pass: process.env.MAILTRAP_PASS,
+  },
+});
 
 export const sendEmailWithAttachment = async (
   to: string,
@@ -14,31 +20,30 @@ export const sendEmailWithAttachment = async (
   filename: string,
   content: Buffer
 ) => {
-  if (!process.env.SENDGRID_API_KEY) {
-    console.warn("⚠️ SendGrid API Key missing. Skipping email.");
+  if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+    console.warn("⚠️ Mailtrap credentials missing. Skipping email.");
     return;
   }
 
   const msg = {
+    from: `"${process.env.MAIL_FROM_NAME || "Gem Palace Jewelry"}" <${process.env.MAIL_FROM_EMAIL || "no-reply@example.com"}>`,
     to,
-    from: process.env.SENDGRID_FROM_EMAIL || "no-reply@example.com",
     subject,
     text,
     attachments: [
       {
-        content: content.toString("base64"),
         filename,
-        type: "application/pdf",
-        disposition: "attachment",
+        content,
+        contentType: "application/pdf",
       },
     ],
   };
 
   try {
-    await sgMail.send(msg);
-    console.log(`📧 Email sent to ${to}`);
+    const info = await transporter.sendMail(msg);
+    console.log(`📧 Email sent to ${to} (Message ID: ${info.messageId})`);
   } catch (error) {
-    console.error("❌ SendGrid error:", error);
+    console.error("❌ Mailtrap error:", error);
     throw error;
   }
 };
