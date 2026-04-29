@@ -21,11 +21,29 @@ app.use(express.json());
 const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
 
 app.use(cors({
-  origin: [allowedOrigin, `${allowedOrigin}/`], // Allow both with and without slash
+  origin: [allowedOrigin, `${allowedOrigin}/`],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+// ── Database Initialization ─────────────────────────────────────────
+const initializeDatabase = async () => {
+  if (!AppDataSource.isInitialized) {
+    try {
+      await AppDataSource.initialize();
+      console.log("✅  Database connected (Neon PostgreSQL)");
+    } catch (err) {
+      console.error("❌  Database connection failed:", err);
+    }
+  }
+};
+
+// Ensure DB is ready BEFORE any route runs (critical for Vercel serverless)
+app.use(async (_req, _res, next) => {
+  await initializeDatabase();
+  next();
+});
 
 // ── Root route ──────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -55,31 +73,14 @@ app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// ── Database Initialization ─────────────────────────────────────────
-const initializeDatabase = async () => {
-  if (!AppDataSource.isInitialized) {
-    try {
-      await AppDataSource.initialize();
-      console.log("✅  Database connected (Neon PostgreSQL)");
-    } catch (err) {
-      console.error("❌  Database connection failed:", err);
-    }
-  }
-};
-
-// ── Startup Logic ──────────────────────────────────────────────────
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// ── Local Dev Startup ─────────────────────────────────────────────
+if (!process.env.VERCEL) {
   const PORT = parseInt(process.env.PORT || "4000", 10);
   initializeDatabase().then(() => {
     app.listen(PORT, () => {
       console.log(`🚀  Backend running at http://localhost:${PORT}`);
+      console.log(`🏥  Health: http://localhost:${PORT}/api/health`);
     });
-  });
-} else {
-  // On Vercel, we initialize for every request (TypeORM handles warm starts)
-  app.use(async (req, res, next) => {
-    await initializeDatabase();
-    next();
   });
 }
 
