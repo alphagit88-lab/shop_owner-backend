@@ -51,12 +51,6 @@ export class ReceiptDetail {
   @Column({ name: "discount_pct", type: "numeric", precision: 5, scale: 2, default: 0 })
   discountPct: number;
 
-  @Column({ name: "discount_amount_usd", type: "numeric", precision: 12, scale: 2, default: 0 })
-  discountAmountUsd: number;
-
-  @Column({ name: "discount_amount_lkr", type: "numeric", precision: 12, scale: 2, default: 0 })
-  discountAmountLkr: number;
-
   @Column({ default: 1 })
   quantity: number;
 
