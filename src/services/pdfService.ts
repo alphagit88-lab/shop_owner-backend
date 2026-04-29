@@ -33,6 +33,8 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
+      const discAmtUsd = (Number(item.unitPriceUsd) * Number(item.discountPct)) / 100;
+      const discAmtLkr = (Number(item.unitPriceLkr) * Number(item.discountPct)) / 100;
       doc.text(`$${Number(item.lineTotalUsd).toLocaleString()}`, 400, y);
       doc.text(`Rs.${Number(item.lineTotalLkr).toLocaleString()}`, 480, y);
       y += 25;
@@ -80,6 +82,8 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
+      const discAmtUsd = (Number(item.unitPriceUsd) * Number(item.discountPct)) / 100;
+      const discAmtLkr = (Number(item.unitPriceLkr) * Number(item.discountPct)) / 100;
       doc.text(`$${Number(item.lineTotalUsd).toLocaleString()}`, 400, y);
       doc.text(`Rs.${Number(item.lineTotalLkr).toLocaleString()}`, 480, y);
       y += 25;

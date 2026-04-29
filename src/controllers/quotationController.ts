@@ -34,14 +34,14 @@ export const createQuotation = async (req: Request, res: Response) => {
       detail.itemDescription = itemData.itemDescription;
       detail.unitPriceUsd = itemData.unitPriceUsd;
       detail.unitPriceLkr = itemData.unitPriceLkr;
-      detail.discountPct = itemData.discountPct || 0;
-      detail.discountAmountUsd = itemData.discountAmountUsd || 0;
-      detail.discountAmountLkr = itemData.discountAmountLkr || 0;
       detail.quantity = itemData.quantity || 1;
+      
+      const discAmtUsd = (Number(detail.unitPriceUsd) * Number(detail.discountPct)) / 100;
+      const discAmtLkr = (Number(detail.unitPriceLkr) * Number(detail.discountPct)) / 100;
 
       // Calculate line totals
-      detail.lineTotalUsd = (detail.unitPriceUsd - detail.discountAmountUsd) * detail.quantity;
-      detail.lineTotalLkr = (detail.unitPriceLkr - detail.discountAmountLkr) * detail.quantity;
+      detail.lineTotalUsd = (Number(detail.unitPriceUsd) - discAmtUsd) * detail.quantity;
+      detail.lineTotalLkr = (Number(detail.unitPriceLkr) - discAmtLkr) * detail.quantity;
 
       totalUsd += Number(detail.lineTotalUsd);
       totalLkr += Number(detail.lineTotalLkr);
@@ -67,45 +67,67 @@ export const updateQuotation = async (req: Request, res: Response) => {
 
     const quotation = await quotationRepo.findOne({
       where: { quotationNo: parseInt(no) },
-      relations: ["details"]
+      relations: ["details", "receipts"] // Added receipts to check if already converted
     });
 
     if (!quotation) return res.status(404).json({ message: "Quotation not found" });
-    if (quotation.status === "CONVERTED") return res.status(400).json({ message: "Cannot edit a converted quotation" });
-
-    // Delete old details
-    await quotationDetailRepo.delete({ quotationNo: quotation.quotationNo });
 
     // Update header
     quotation.customerId = customerId;
     quotation.customerName = customerName;
     quotation.notes = notes;
-    quotation.details = [];
 
     let totalUsd = 0;
     let totalLkr = 0;
 
+    // Smart Update: Keep existing IDs where possible to avoid FK issues with Receipts
+    const updatedDetails: QuotationDetail[] = [];
+    
     for (const itemData of details) {
-      const detail = new QuotationDetail();
+      let detail: QuotationDetail;
+      
+      // Try to find existing detail to update
+      const existingDetail = quotation.details.find(d => 
+        (d.itemId && d.itemId === itemData.itemId) || 
+        (!d.itemId && d.itemCode === itemData.itemCode && d.itemDescription === itemData.itemDescription)
+      );
+
+      if (existingDetail) {
+        detail = existingDetail;
+      } else {
+        detail = new QuotationDetail();
+        detail.quotationNo = quotation.quotationNo;
+      }
+
       detail.itemId = itemData.itemId;
       detail.itemCode = itemData.itemCode;
       detail.itemDescription = itemData.itemDescription;
-      detail.unitPriceUsd = itemData.unitPriceUsd;
-      detail.unitPriceLkr = itemData.unitPriceLkr;
-      detail.discountPct = itemData.discountPct || 0;
-      detail.discountAmountUsd = itemData.discountAmountUsd || 0;
-      detail.discountAmountLkr = itemData.discountAmountLkr || 0;
-      detail.quantity = itemData.quantity || 1;
+      detail.unitPriceUsd = Number(itemData.unitPriceUsd);
+      detail.unitPriceLkr = Number(itemData.unitPriceLkr);
+      detail.discountPct = Number(itemData.discountPct) || 0;
+      detail.quantity = Number(itemData.quantity) || 1;
 
-      detail.lineTotalUsd = (detail.unitPriceUsd - detail.discountAmountUsd) * detail.quantity;
-      detail.lineTotalLkr = (detail.unitPriceLkr - detail.discountAmountLkr) * detail.quantity;
+      const discAmtUsd = (detail.unitPriceUsd * detail.discountPct) / 100;
+      const discAmtLkr = (detail.unitPriceLkr * detail.discountPct) / 100;
+
+      detail.lineTotalUsd = (detail.unitPriceUsd - discAmtUsd) * detail.quantity;
+      detail.lineTotalLkr = (detail.unitPriceLkr - discAmtLkr) * detail.quantity;
 
       totalUsd += Number(detail.lineTotalUsd);
       totalLkr += Number(detail.lineTotalLkr);
 
-      quotation.details.push(detail);
+      updatedDetails.push(detail);
     }
 
+    // Remove details that are no longer in the list (only if not linked to receipts)
+    const detailIdsToKeep = updatedDetails.filter(d => d.id).map(d => d.id);
+    const detailsToRemove = quotation.details.filter(d => !detailIdsToKeep.includes(d.id));
+    
+    if (detailsToRemove.length > 0) {
+      await quotationDetailRepo.remove(detailsToRemove);
+    }
+
+    quotation.details = updatedDetails;
     quotation.totalUsd = totalUsd;
     quotation.totalLkr = totalLkr;
 
@@ -209,8 +231,6 @@ export const convertToReceipt = async (req: Request, res: Response) => {
       rd.unitPriceUsd = qd.unitPriceUsd;
       rd.unitPriceLkr = qd.unitPriceLkr;
       rd.discountPct = qd.discountPct;
-      rd.discountAmountUsd = qd.discountAmountUsd;
-      rd.discountAmountLkr = qd.discountAmountLkr;
       rd.quantity = qd.quantity;
       rd.lineTotalUsd = qd.lineTotalUsd;
       rd.lineTotalLkr = qd.lineTotalLkr;
