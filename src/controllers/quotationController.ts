@@ -195,6 +195,25 @@ export const sendQuotationEmail = async (req: Request, res: Response) => {
   }
 };
 
+export const downloadQuotationPdf = async (req: Request, res: Response) => {
+  try {
+    const no = req.params.no as string;
+    const quotation = await quotationRepo.findOne({
+      where: { quotationNo: parseInt(no) },
+      relations: ["details", "customer"]
+    });
+
+    if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+
+    const pdfBuffer = await generateQuotationPDF(quotation);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="quotation_${no}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ message: "Error generating PDF" });
+  }
+};
+
 export const convertToReceipt = async (req: Request, res: Response) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();

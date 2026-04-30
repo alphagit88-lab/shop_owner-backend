@@ -58,3 +58,22 @@ export const sendReceiptEmail = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error sending email" });
   }
 };
+
+export const downloadReceiptPdf = async (req: Request, res: Response) => {
+  try {
+    const no = req.params.no as string;
+    const receipt = await receiptRepo.findOne({
+      where: { receiptNo: parseInt(no) },
+      relations: ["details", "customer"]
+    });
+
+    if (!receipt) return res.status(404).json({ message: "Receipt not found" });
+
+    const pdfBuffer = await generateReceiptPDF(receipt);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="receipt_${no}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ message: "Error generating PDF" });
+  }
+};
