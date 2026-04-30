@@ -34,7 +34,7 @@ export const sendEmailWithAttachment = async (
   console.log(`📤 Attempting to send email to ${to}...`);
 
   const msg = {
-    from: `"${process.env.MAIL_FROM_NAME || "Gem Palace Jewelry"}" <${process.env.MAIL_FROM_EMAIL || "no-reply@example.com"}>`,
+    from: `"${process.env.MAIL_FROM_NAME || "Invoice Dashboard"}" <${process.env.MAIL_FROM_EMAIL || "no-reply@example.com"}>`,
     to,
     subject,
     text,

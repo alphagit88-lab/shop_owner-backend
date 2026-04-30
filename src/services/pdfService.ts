@@ -1,9 +1,25 @@
 import PDFDocument from "pdfkit";
 import { QuotationHeader } from "../entity/QuotationHeader";
 import { ReceiptHeader } from "../entity/ReceiptHeader";
+import { AppDataSource } from "../data-source";
+import { Setting } from "../entity/Setting";
+
+const getCurrency = async () => {
+  const settingRepo = AppDataSource.getRepository(Setting);
+  const setting = await settingRepo.findOneBy({ key: "currency" });
+  return setting?.value || "LKR";
+};
+
+const formatPdfCurrency = (amount: number | string, currency: string) => {
+  const val = Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (currency === "LKR") return `Rs. ${val}`;
+  if (currency === "USD") return `$${val}`;
+  return `${currency} ${val}`;
+};
 
 export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<Buffer> => {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    const currency = await getCurrency();
     const doc = new PDFDocument({ margin: 50 });
     const buffers: any[] = [];
     doc.on("data", buffers.push.bind(buffers));
@@ -23,8 +39,7 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
     doc.fontSize(10).text("Item Code", 50, tableTop);
     doc.text("Description", 120, tableTop);
     doc.text("Qty", 350, tableTop);
-    doc.text("Total (USD)", 400, tableTop);
-    doc.text("Total (LKR)", 480, tableTop);
+    doc.text(`Total (${currency})`, 450, tableTop, { align: 'right', width: 100 });
     doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
     // Line Items
@@ -33,25 +48,24 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
-      const discAmtUsd = (Number(item.unitPriceUsd) * Number(item.discountPct)) / 100;
-      const discAmtLkr = (Number(item.unitPriceLkr) * Number(item.discountPct)) / 100;
-      doc.text(`$${Number(item.lineTotalUsd).toLocaleString()}`, 400, y);
-      doc.text(`Rs.${Number(item.lineTotalLkr).toLocaleString()}`, 480, y);
+      const amount = currency === 'LKR' ? item.lineTotalLkr : item.lineTotalUsd;
+      doc.text(formatPdfCurrency(amount, currency), 450, y, { align: 'right', width: 100 });
       y += 25;
     });
 
     // Grand Totals
     doc.moveTo(50, y).lineTo(550, y).stroke();
-    doc.fontSize(12).text("GRAND TOTAL:", 300, y + 20);
-    doc.text(`$${Number(quotation.totalUsd).toLocaleString()}`, 400, y + 20);
-    doc.text(`Rs.${Number(quotation.totalLkr).toLocaleString()}`, 480, y + 20);
+    doc.fontSize(12).font('Helvetica-Bold').text("GRAND TOTAL:", 300, y + 20);
+    const totalAmount = currency === 'LKR' ? quotation.totalLkr : quotation.totalUsd;
+    doc.text(formatPdfCurrency(totalAmount, currency), 450, y + 20, { align: 'right', width: 100 });
 
     doc.end();
   });
 };
 
 export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer> => {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    const currency = await getCurrency();
     const doc = new PDFDocument({ margin: 50 });
     const buffers: any[] = [];
     doc.on("data", buffers.push.bind(buffers));
@@ -72,8 +86,7 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
     doc.fontSize(10).text("Item Code", 50, tableTop);
     doc.text("Description", 120, tableTop);
     doc.text("Qty", 350, tableTop);
-    doc.text("Price (USD)", 400, tableTop);
-    doc.text("Price (LKR)", 480, tableTop);
+    doc.text(`Price (${currency})`, 450, tableTop, { align: 'right', width: 100 });
     doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
     // Line Items
@@ -82,18 +95,16 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
-      const discAmtUsd = (Number(item.unitPriceUsd) * Number(item.discountPct)) / 100;
-      const discAmtLkr = (Number(item.unitPriceLkr) * Number(item.discountPct)) / 100;
-      doc.text(`$${Number(item.lineTotalUsd).toLocaleString()}`, 400, y);
-      doc.text(`Rs.${Number(item.lineTotalLkr).toLocaleString()}`, 480, y);
+      const amount = currency === 'LKR' ? item.lineTotalLkr : item.lineTotalUsd;
+      doc.text(formatPdfCurrency(amount, currency), 450, y, { align: 'right', width: 100 });
       y += 25;
     });
 
     // Totals
     doc.moveTo(50, y).lineTo(550, y).stroke();
     doc.fontSize(12).font('Helvetica-Bold').text("TOTAL PAID:", 300, y + 20);
-    doc.text(`$${Number(receipt.totalPaidUsd).toLocaleString()}`, 400, y + 20);
-    doc.text(`Rs.${Number(receipt.totalPaidLkr).toLocaleString()}`, 480, y + 20);
+    const totalPaid = currency === 'LKR' ? receipt.totalPaidLkr : receipt.totalPaidUsd;
+    doc.text(formatPdfCurrency(totalPaid, currency), 450, y + 20, { align: 'right', width: 100 });
 
     // Paid Stamp
     y += 80;

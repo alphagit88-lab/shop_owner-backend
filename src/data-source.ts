@@ -8,6 +8,7 @@ import { QuotationHeader } from "./entity/QuotationHeader";
 import { QuotationDetail } from "./entity/QuotationDetail";
 import { ReceiptHeader } from "./entity/ReceiptHeader";
 import { ReceiptDetail } from "./entity/ReceiptDetail";
+import { Setting } from "./entity/Setting";
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
   ssl: { rejectUnauthorized: false }, // required for Neon
   synchronize: true,                  // ← Set to true temporarily to sync schema
   logging: process.env.NODE_ENV === "development",
-  entities: [User, Item, Customer, QuotationHeader, QuotationDetail, ReceiptHeader, ReceiptDetail],
+  entities: [User, Item, Customer, QuotationHeader, QuotationDetail, ReceiptHeader, ReceiptDetail, Setting],
   migrations: ["dist/migration/*.js"],  // compiled migration files
   migrationsTableName: "typeorm_migrations",
 });

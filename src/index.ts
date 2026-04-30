@@ -10,6 +10,8 @@ import itemRoutes      from "./routes/items";
 import customerRoutes  from "./routes/customers";
 import quotationRoutes from "./routes/quotations";
 import receiptRoutes   from "./routes/receipts";
+import { getSettings, updateSetting } from "./controllers/settingController";
+import { authMiddleware } from "./middleware/authMiddleware";
 
 dotenv.config();
 
@@ -17,6 +19,10 @@ const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────
 app.use(express.json());
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
 
@@ -49,7 +55,7 @@ app.use(async (_req, _res, next) => {
 app.get("/", (_req, res) => {
   res.send(`
     <div style="font-family: sans-serif; padding: 50px; text-align: center;">
-      <h1 style="color: #f59e0b;">💎 Gem Palace Backend</h1>
+      <h1 style="color: #f59e0b;">💎 Invoice Dashboard Backend</h1>
       <p>Status: <span style="color: green;">Online</span></p>
       <p>API is running. Check health at: <a href="/api/health">/api/health</a></p>
     </div>
@@ -58,10 +64,14 @@ app.get("/", (_req, res) => {
 
 // ── Health check ─────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({ status: "ok", version: "1.0.2", timestamp: new Date().toISOString() });
 });
 
 // ── Route registration ──────────────────────────────────────────
+// Use regex to handle trailing slashes robustly
+app.get(["/api/settings", "/api/settings/"], authMiddleware, getSettings);
+app.post(["/api/settings", "/api/settings/"], authMiddleware, updateSetting);
+
 app.use("/api/auth",       authRoutes);
 app.use("/api/items",      itemRoutes);
 app.use("/api/customers",  customerRoutes);
