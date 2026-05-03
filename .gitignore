@@ -8,6 +8,9 @@ dist/
 .env
 .env.local
 
+# Scratch
+scratch/
+
 # Logs
 *.log
 npm-debug.log*
