@@ -34,8 +34,6 @@ export class QuotationHeader {
   @Column({ length: 20, default: "DRAFT" })
   status: QuotationStatus;
 
-  @Column({ name: "total_usd", type: "numeric", precision: 12, scale: 2, nullable: true })
-  totalUsd: number;
 
   @Column({ name: "total_lkr", type: "numeric", precision: 12, scale: 2, nullable: true })
   totalLkr: number;

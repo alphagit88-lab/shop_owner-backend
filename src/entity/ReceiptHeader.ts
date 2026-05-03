@@ -41,8 +41,6 @@ export class ReceiptHeader {
   @Column({ name: "payment_method", length: 50, nullable: true })
   paymentMethod: PaymentMethod;
 
-  @Column({ name: "total_paid_usd", type: "numeric", precision: 12, scale: 2, nullable: true })
-  totalPaidUsd: number;
 
   @Column({ name: "total_paid_lkr", type: "numeric", precision: 12, scale: 2, nullable: true })
   totalPaidLkr: number;

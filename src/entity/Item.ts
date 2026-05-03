@@ -20,8 +20,6 @@ export class Item {
   @Column({ name: "item_description", type: "text" })
   itemDescription: string;
 
-  @Column({ name: "unit_price_usd", type: "numeric", precision: 12, scale: 2 })
-  unitPriceUsd: number;
 
   @Column({ name: "unit_price_lkr", type: "numeric", precision: 12, scale: 2 })
   unitPriceLkr: number;

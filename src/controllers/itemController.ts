@@ -55,8 +55,9 @@ export const deleteItem = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     await itemRepo.delete(id);
-    res.json({ message: "Item deleted" });
+    res.json({ message: "Item deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting item" });
+    console.error("Delete Error:", error);
+    res.status(500).json({ message: "Error deleting item. It may be referenced in other records." });
   }
 };

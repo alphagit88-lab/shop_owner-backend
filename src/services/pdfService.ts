@@ -48,16 +48,16 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
-      const amount = currency === 'LKR' ? item.lineTotalLkr : item.lineTotalUsd;
-      doc.text(formatPdfCurrency(amount, currency), 450, y, { align: 'right', width: 100 });
+      const amount = item.lineTotalLkr;
+      doc.text(formatPdfCurrency(amount, 'LKR'), 450, y, { align: 'right', width: 100 });
       y += 25;
     });
 
     // Grand Totals
     doc.moveTo(50, y).lineTo(550, y).stroke();
     doc.fontSize(12).font('Helvetica-Bold').text("GRAND TOTAL:", 300, y + 20);
-    const totalAmount = currency === 'LKR' ? quotation.totalLkr : quotation.totalUsd;
-    doc.text(formatPdfCurrency(totalAmount, currency), 450, y + 20, { align: 'right', width: 100 });
+    const totalAmount = quotation.totalLkr;
+    doc.text(formatPdfCurrency(totalAmount, 'LKR'), 450, y + 20, { align: 'right', width: 100 });
 
     doc.end();
   });
@@ -95,16 +95,16 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
       doc.text(item.itemCode || "-", 50, y);
       doc.text(item.itemDescription || "-", 120, y, { width: 220 });
       doc.text(item.quantity.toString(), 350, y);
-      const amount = currency === 'LKR' ? item.lineTotalLkr : item.lineTotalUsd;
-      doc.text(formatPdfCurrency(amount, currency), 450, y, { align: 'right', width: 100 });
+      const amount = item.lineTotalLkr;
+      doc.text(formatPdfCurrency(amount, 'LKR'), 450, y, { align: 'right', width: 100 });
       y += 25;
     });
 
     // Totals
     doc.moveTo(50, y).lineTo(550, y).stroke();
     doc.fontSize(12).font('Helvetica-Bold').text("TOTAL PAID:", 300, y + 20);
-    const totalPaid = currency === 'LKR' ? receipt.totalPaidLkr : receipt.totalPaidUsd;
-    doc.text(formatPdfCurrency(totalPaid, currency), 450, y + 20, { align: 'right', width: 100 });
+    const totalPaid = receipt.totalPaidLkr;
+    doc.text(formatPdfCurrency(totalPaid, 'LKR'), 450, y + 20, { align: 'right', width: 100 });
 
     // Paid Stamp
     y += 80;

@@ -14,6 +14,7 @@ export const getAllReceipts = async (req: Request, res: Response) => {
     });
     res.json(receipts);
   } catch (error) {
+    console.error("Error in receipt controller:", error);
     res.status(500).json({ message: "Error fetching receipts" });
   }
 };

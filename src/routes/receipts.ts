@@ -4,7 +4,7 @@ import { authMiddleware } from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 router.get("/",          receiptController.getAllReceipts);
 router.get("/:no",       receiptController.getReceipt);

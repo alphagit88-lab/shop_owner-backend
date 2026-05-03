@@ -28,7 +28,7 @@ export class ReceiptDetail {
   @Column({ name: "quotation_detail_id", nullable: true })
   quotationDetailId: number;
 
-  @ManyToOne(() => Item, (i) => i.receiptDetails, { nullable: true })
+  @ManyToOne(() => Item, (i) => i.receiptDetails, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "item_id" })
   item: Item;
 
@@ -42,9 +42,6 @@ export class ReceiptDetail {
   @Column({ name: "item_description", type: "text", nullable: true })
   itemDescription: string;
 
-  @Column({ name: "unit_price_usd", type: "numeric", precision: 12, scale: 2, default: 0 })
-  unitPriceUsd: number;
-
   @Column({ name: "unit_price_lkr", type: "numeric", precision: 12, scale: 2, default: 0 })
   unitPriceLkr: number;
 
@@ -53,9 +50,6 @@ export class ReceiptDetail {
 
   @Column({ default: 1 })
   quantity: number;
-
-  @Column({ name: "line_total_usd", type: "numeric", precision: 12, scale: 2, default: 0 })
-  lineTotalUsd: number;
 
   @Column({ name: "line_total_lkr", type: "numeric", precision: 12, scale: 2, default: 0 })
   lineTotalLkr: number;

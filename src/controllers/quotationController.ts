@@ -23,7 +23,6 @@ export const createQuotation = async (req: Request, res: Response) => {
     quotation.notes = notes;
     quotation.details = [];
 
-    let totalUsd = 0;
     let totalLkr = 0;
 
     // Create details
@@ -32,24 +31,20 @@ export const createQuotation = async (req: Request, res: Response) => {
       detail.itemId = itemData.itemId;
       detail.itemCode = itemData.itemCode;
       detail.itemDescription = itemData.itemDescription;
-      detail.unitPriceUsd = itemData.unitPriceUsd;
-      detail.unitPriceLkr = itemData.unitPriceLkr;
-      detail.quantity = itemData.quantity || 1;
+      detail.unitPriceLkr = Number(itemData.unitPriceLkr) || 0;
+      detail.discountPct = Number(itemData.discountPct) || 0;
+      detail.quantity = Number(itemData.quantity) || 1;
       
-      const discAmtUsd = (Number(detail.unitPriceUsd) * Number(detail.discountPct)) / 100;
-      const discAmtLkr = (Number(detail.unitPriceLkr) * Number(detail.discountPct)) / 100;
+      const discAmtLkr = (detail.unitPriceLkr * detail.discountPct) / 100;
 
       // Calculate line totals
-      detail.lineTotalUsd = (Number(detail.unitPriceUsd) - discAmtUsd) * detail.quantity;
-      detail.lineTotalLkr = (Number(detail.unitPriceLkr) - discAmtLkr) * detail.quantity;
+      detail.lineTotalLkr = (detail.unitPriceLkr - discAmtLkr) * detail.quantity;
 
-      totalUsd += Number(detail.lineTotalUsd);
-      totalLkr += Number(detail.lineTotalLkr);
+      totalLkr += detail.lineTotalLkr;
 
       quotation.details.push(detail);
     }
 
-    quotation.totalUsd = totalUsd;
     quotation.totalLkr = totalLkr;
 
     await quotationRepo.save(quotation);
@@ -77,7 +72,6 @@ export const updateQuotation = async (req: Request, res: Response) => {
     quotation.customerName = customerName;
     quotation.notes = notes;
 
-    let totalUsd = 0;
     let totalLkr = 0;
 
     // Smart Update: Keep existing IDs where possible to avoid FK issues with Receipts
@@ -102,18 +96,14 @@ export const updateQuotation = async (req: Request, res: Response) => {
       detail.itemId = itemData.itemId;
       detail.itemCode = itemData.itemCode;
       detail.itemDescription = itemData.itemDescription;
-      detail.unitPriceUsd = Number(itemData.unitPriceUsd);
-      detail.unitPriceLkr = Number(itemData.unitPriceLkr);
+      detail.unitPriceLkr = Number(itemData.unitPriceLkr) || 0;
       detail.discountPct = Number(itemData.discountPct) || 0;
       detail.quantity = Number(itemData.quantity) || 1;
 
-      const discAmtUsd = (detail.unitPriceUsd * detail.discountPct) / 100;
       const discAmtLkr = (detail.unitPriceLkr * detail.discountPct) / 100;
 
-      detail.lineTotalUsd = (detail.unitPriceUsd - discAmtUsd) * detail.quantity;
       detail.lineTotalLkr = (detail.unitPriceLkr - discAmtLkr) * detail.quantity;
 
-      totalUsd += Number(detail.lineTotalUsd);
       totalLkr += Number(detail.lineTotalLkr);
 
       updatedDetails.push(detail);
@@ -128,7 +118,6 @@ export const updateQuotation = async (req: Request, res: Response) => {
     }
 
     quotation.details = updatedDetails;
-    quotation.totalUsd = totalUsd;
     quotation.totalLkr = totalLkr;
 
     await quotationRepo.save(quotation);
@@ -147,7 +136,8 @@ export const getAllQuotations = async (req: Request, res: Response) => {
     });
     res.json(quotations);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching quotations" });
+    console.error("Error in quotation controller:", error);
+    res.status(500).json({ message: "Error in quotation controller" });
   }
 };
 
@@ -161,6 +151,7 @@ export const getQuotation = async (req: Request, res: Response) => {
     if (!quotation) return res.status(404).json({ message: "Quotation not found" });
     res.json(quotation);
   } catch (error) {
+    console.error("Error in quotation controller:", error);
     res.status(500).json({ message: "Error fetching quotation" });
   }
 };
@@ -237,7 +228,6 @@ export const convertToReceipt = async (req: Request, res: Response) => {
     receipt.customerId = quotation.customerId;
     receipt.customerName = quotation.customerName;
     receipt.paymentMethod = paymentMethod;
-    receipt.totalPaidUsd = quotation.totalUsd;
     receipt.totalPaidLkr = quotation.totalLkr;
     receipt.details = [];
 
@@ -247,11 +237,9 @@ export const convertToReceipt = async (req: Request, res: Response) => {
       rd.itemId = qd.itemId;
       rd.itemCode = qd.itemCode;
       rd.itemDescription = qd.itemDescription;
-      rd.unitPriceUsd = qd.unitPriceUsd;
       rd.unitPriceLkr = qd.unitPriceLkr;
       rd.discountPct = qd.discountPct;
       rd.quantity = qd.quantity;
-      rd.lineTotalUsd = qd.lineTotalUsd;
       rd.lineTotalLkr = qd.lineTotalLkr;
       
       receipt.details.push(rd);

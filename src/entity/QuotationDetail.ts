@@ -22,7 +22,7 @@ export class QuotationDetail {
   @Column({ name: "quotation_no" })
   quotationNo: number;
 
-  @ManyToOne(() => Item, (i) => i.quotationDetails, { nullable: true })
+  @ManyToOne(() => Item, (i) => i.quotationDetails, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "item_id" })
   item: Item;
 
@@ -36,9 +36,6 @@ export class QuotationDetail {
   @Column({ name: "item_description", type: "text", nullable: true })
   itemDescription: string;
 
-  @Column({ name: "unit_price_usd", type: "numeric", precision: 12, scale: 2, default: 0 })
-  unitPriceUsd: number;
-
   @Column({ name: "unit_price_lkr", type: "numeric", precision: 12, scale: 2, default: 0 })
   unitPriceLkr: number;
 
@@ -47,9 +44,6 @@ export class QuotationDetail {
 
   @Column({ default: 1 })
   quantity: number;
-
-  @Column({ name: "line_total_usd", type: "numeric", precision: 12, scale: 2, default: 0 })
-  lineTotalUsd: number;
 
   @Column({ name: "line_total_lkr", type: "numeric", precision: 12, scale: 2, default: 0 })
   lineTotalLkr: number;

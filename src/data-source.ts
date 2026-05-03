@@ -16,7 +16,7 @@ export const AppDataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }, // required for Neon
-  synchronize: true,                  // ← Set to true temporarily to sync schema
+  synchronize: false,                  // Disabled after schema sync
   logging: process.env.NODE_ENV === "development",
   entities: [User, Item, Customer, QuotationHeader, QuotationDetail, ReceiptHeader, ReceiptDetail, Setting],
   migrations: ["dist/migration/*.js"],  // compiled migration files

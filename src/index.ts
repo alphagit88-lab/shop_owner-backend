@@ -63,11 +63,11 @@ const initializeDatabase = async () => {
   }
 };
 
-// Ensure DB is ready BEFORE any route runs (critical for Vercel serverless)
-app.use(async (_req, _res, next) => {
-  await initializeDatabase();
-  next();
-});
+// Ensure DB is ready (already handled in startup)
+// app.use(async (_req, _res, next) => {
+//   await initializeDatabase();
+//   next();
+// });
 
 // ── Root route ──────────────────────────────────────────────────
 app.get("/", (_req, res) => {
