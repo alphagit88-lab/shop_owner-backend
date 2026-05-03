@@ -27,27 +27,27 @@ const allowedOrigins = [
 ].filter(Boolean).map(url => url!.replace(/\/$/, ""));
 
 app.use(cors({
-  origin: true, // Reflects the request origin, allowing all but keeping credentials support
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.includes(normalizedOrigin) || normalizedOrigin.includes("titancore-technologies")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use(express.json());
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && (allowedOrigins.includes(origin.replace(/\/$/, "")) || origin.includes("titancore-technologies"))) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  }
-  
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  
-  console.log(`${req.method} ${req.url} (Origin: ${origin})`);
+
+// Log requests
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url} (Origin: ${req.headers.origin})`);
   next();
 });
 
