@@ -63,7 +63,23 @@ export const deleteCustomer = async (req: Request, res: Response) => {
     const result = await customerRepo.delete(req.params.id);
     if (result.affected === 0) return res.status(404).json({ message: "Customer not found" });
     res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting customer" });
+  } catch (error: any) {
+    console.error("CRITICAL: Delete customer error full object:", error);
+    
+    const errorString = String(error.message || error).toLowerCase();
+    const isForeignKey = error.code === '23503' || 
+                         errorString.includes('foreign key') || 
+                         errorString.includes('violates constraint');
+
+    if (isForeignKey) {
+      return res.status(400).json({ 
+        message: "Cannot delete this customer because they have existing quotations or receipts. Delete those records first."
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Error deleting customer", 
+      error: error.message 
+    });
   }
 };

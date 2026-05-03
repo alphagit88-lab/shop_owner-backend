@@ -5,18 +5,24 @@ import dotenv from "dotenv";
 import { AppDataSource } from "./data-source";
 
 // Routes
-import authRoutes      from "./routes/auth";
-import itemRoutes      from "./routes/items";
-import customerRoutes  from "./routes/customers";
+import authRoutes from "./routes/auth";
+import itemRoutes from "./routes/items";
+import customerRoutes from "./routes/customers";
 import quotationRoutes from "./routes/quotations";
-import receiptRoutes   from "./routes/receipts";
-import uploadRoutes    from "./routes/upload";
+import receiptRoutes from "./routes/receipts";
+import uploadRoutes from "./routes/upload";
 import { getSettings, updateSetting } from "./controllers/settingController";
 import { authMiddleware } from "./middleware/authMiddleware";
 
 dotenv.config();
 
 const app = express();
+
+// ── Global Logger ──────────────────────────────────────────────────
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // ── Middleware ────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -86,12 +92,12 @@ app.get("/api/health", (_req, res) => {
 app.get(["/api/settings", "/api/settings/"], authMiddleware, getSettings);
 app.post(["/api/settings", "/api/settings/"], authMiddleware, updateSetting);
 
-app.use("/api/auth",       authRoutes);
-app.use("/api/items",      itemRoutes);
-app.use("/api/customers",  customerRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/items", itemRoutes);
+app.use("/api/customers", customerRoutes);
 app.use("/api/quotations", quotationRoutes);
-app.use("/api/receipts",   receiptRoutes);
-app.use("/api/upload",     uploadRoutes);
+app.use("/api/receipts", receiptRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────
 app.use((_req, res) => {
