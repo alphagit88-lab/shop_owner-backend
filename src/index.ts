@@ -10,6 +10,7 @@ import itemRoutes      from "./routes/items";
 import customerRoutes  from "./routes/customers";
 import quotationRoutes from "./routes/quotations";
 import receiptRoutes   from "./routes/receipts";
+import uploadRoutes    from "./routes/upload";
 import { getSettings, updateSetting } from "./controllers/settingController";
 import { authMiddleware } from "./middleware/authMiddleware";
 
@@ -18,20 +19,38 @@ dotenv.config();
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────
-app.use(express.json());
-app.use((req, _res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-const allowedOrigin = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://shop-owner-frontend.vercel.app",
+  "https://titancore-technologies-frontend.vercel.app",
+  process.env.FRONTEND_URL
+].filter(Boolean).map(url => url!.replace(/\/$/, ""));
 
 app.use(cors({
-  origin: [allowedOrigin, `${allowedOrigin}/`],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked for origin: ${origin}`);
+      // On Vercel, instead of failing, we can return the origin to debug, 
+      // but for security we just don't add headers.
+      callback(null, false); 
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+app.use(express.json());
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url} (Origin: ${req.headers.origin})`);
+  next();
+});
 
 // ── Database Initialization ─────────────────────────────────────────
 const initializeDatabase = async () => {
@@ -55,7 +74,7 @@ app.use(async (_req, _res, next) => {
 app.get("/", (_req, res) => {
   res.send(`
     <div style="font-family: sans-serif; padding: 50px; text-align: center;">
-      <h1 style="color: #f59e0b;">💎 Invoice Dashboard Backend</h1>
+      <h1 style="color: #f59e0b;">💎 TitanCore Technologies Backend</h1>
       <p>Status: <span style="color: green;">Online</span></p>
       <p>API is running. Check health at: <a href="/api/health">/api/health</a></p>
     </div>
@@ -77,6 +96,7 @@ app.use("/api/items",      itemRoutes);
 app.use("/api/customers",  customerRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api/receipts",   receiptRoutes);
+app.use("/api/upload",     uploadRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────
 app.use((_req, res) => {
