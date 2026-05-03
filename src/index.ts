@@ -32,12 +32,16 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const normalizedOrigin = origin.replace(/\/$/, "");
-    if (allowedOrigins.includes(normalizedOrigin)) {
+    
+    // Check if origin is in our allowed list or is a Vercel subdomain for our project
+    const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
+                     normalizedOrigin.includes("titancore-technologies") ||
+                     normalizedOrigin.includes("shop-owner-frontend");
+
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked for origin: ${origin}`);
-      // On Vercel, instead of failing, we can return the origin to debug, 
-      // but for security we just don't add headers.
       callback(null, false); 
     }
   },
@@ -47,8 +51,20 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use((req, _res, next) => {
-  console.log(`${req.method} ${req.url} (Origin: ${req.headers.origin})`);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin.replace(/\/$/, "")) || origin.includes("titancore-technologies"))) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  
+  console.log(`${req.method} ${req.url} (Origin: ${origin})`);
   next();
 });
 
