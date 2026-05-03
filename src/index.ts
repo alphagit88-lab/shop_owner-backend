@@ -28,39 +28,9 @@ const allowedOrigins = [
 ].filter(Boolean).map(url => url!.trim().replace(/\/$/, ""));
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const normalizedOrigin = origin.trim().replace(/\/$/, "");
-    
-    // Check if origin is allowed
-    const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
-                     normalizedOrigin.includes("titancore-technologies") ||
-                     normalizedOrigin.endsWith(".vercel.app");
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`[CORS] Blocked origin: ${origin}`);
-      // Return null, false instead of Error to avoid triggering the error handler
-      // which might return a response without CORS headers.
-      callback(null, false);
-    }
-  },
-  credentials: true,
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "X-Requested-With", 
-    "Accept", 
-    "Origin",
-    "Access-Control-Allow-Headers",
-    "Access-Control-Request-Method",
-    "Access-Control-Request-Headers"
-  ],
-  preflightContinue: false,
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
   optionsSuccessStatus: 204
 }));
 
