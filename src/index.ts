@@ -27,24 +27,7 @@ const allowedOrigins = [
 ].filter(Boolean).map(url => url!.replace(/\/$/, ""));
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const normalizedOrigin = origin.replace(/\/$/, "");
-    
-    // Check if origin is in our allowed list or is a Vercel subdomain for our project
-    const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
-                     normalizedOrigin.includes("titancore-technologies") ||
-                     normalizedOrigin.includes("shop-owner-frontend");
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked for origin: ${origin}`);
-      callback(null, false); 
-    }
-  },
+  origin: true, // Reflects the request origin, allowing all but keeping credentials support
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
