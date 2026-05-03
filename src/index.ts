@@ -63,11 +63,16 @@ const initializeDatabase = async () => {
   }
 };
 
-// Ensure DB is ready (already handled in startup)
-// app.use(async (_req, _res, next) => {
-//   await initializeDatabase();
-//   next();
-// });
+// Ensure DB is ready (crucial for Vercel/Serverless)
+app.use(async (_req, res, next) => {
+  try {
+    await initializeDatabase();
+    next();
+  } catch (err) {
+    console.error("Database initialization middleware error:", err);
+    res.status(500).json({ message: "Database connection failed" });
+  }
+});
 
 // ── Root route ──────────────────────────────────────────────────
 app.get("/", (_req, res) => {
