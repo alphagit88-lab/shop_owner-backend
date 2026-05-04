@@ -6,7 +6,19 @@ import { ReceiptHeader } from "../entity/ReceiptHeader";
 import { AppDataSource } from "../data-source";
 import { Setting } from "../entity/Setting";
 
-const LOGO_PATH = path.join(process.cwd(), "assets", "logo.png");
+const getLogoPath = () => {
+  const paths = [
+    path.join(process.cwd(), "assets", "logo.png"),
+    path.join(__dirname, "..", "assets", "logo.png"),
+    path.join(__dirname, "..", "..", "assets", "logo.png")
+  ];
+  for (const p of paths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+};
+
+const LOGO_PATH = getLogoPath();
 
 const getCurrency = async () => {
   const settingRepo = AppDataSource.getRepository(Setting);
@@ -30,7 +42,7 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
     doc.on("end", () => resolve(Buffer.concat(buffers)));
 
     // Header & Logo
-    if (fs.existsSync(LOGO_PATH)) {
+    if (LOGO_PATH && fs.existsSync(LOGO_PATH)) {
       doc.image(LOGO_PATH, 50, 45, { width: 50 });
     }
 
@@ -84,7 +96,7 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
     doc.on("end", () => resolve(Buffer.concat(buffers)));
 
     // Header & Logo
-    if (fs.existsSync(LOGO_PATH)) {
+    if (LOGO_PATH && fs.existsSync(LOGO_PATH)) {
       doc.image(LOGO_PATH, 50, 45, { width: 50 });
     }
 

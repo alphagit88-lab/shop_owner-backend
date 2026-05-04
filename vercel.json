@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["assets/**"]
+      }
     }
   ],
   "routes": [
@@ -16,10 +19,5 @@
         "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
       }
     }
-  ],
-  "functions": {
-    "src/index.ts": {
-      "includeFiles": "assets/**"
-    }
-  }
+  ]
 }
