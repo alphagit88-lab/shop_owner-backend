@@ -35,7 +35,6 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
     }
 
     doc.fontSize(20).font('Helvetica-Bold').text(process.env.SHOP_NAME || "TITANCORE", 110, 50);
-    doc.fontSize(10).font('Helvetica').text("Luxury Jewellery & Gems", 110, 75);
     
     doc.fontSize(10).font('Helvetica-Bold').text("OFFICIAL QUOTATION", 400, 50, { align: 'right' });
     doc.fontSize(10).font('Helvetica').text(`No: Q-${quotation.quotationNo.toString().padStart(5, '0')}`, 400, 65, { align: 'right' });
@@ -90,7 +89,6 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
     }
 
     doc.fontSize(20).font('Helvetica-Bold').text(process.env.SHOP_NAME || "TITANCORE", 110, 50);
-    doc.fontSize(10).font('Helvetica').text("Luxury Jewellery & Gems", 110, 75);
     
     doc.fontSize(10).font('Helvetica-Bold').text("PAYMENT RECEIPT", 400, 50, { align: 'right' });
     doc.fontSize(10).font('Helvetica').text(`No: R-${receipt.receiptNo.toString().padStart(5, '0')}`, 400, 65, { align: 'right' });
