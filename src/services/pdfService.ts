@@ -1,8 +1,12 @@
 import PDFDocument from "pdfkit";
+import path from "path";
+import fs from "fs";
 import { QuotationHeader } from "../entity/QuotationHeader";
 import { ReceiptHeader } from "../entity/ReceiptHeader";
 import { AppDataSource } from "../data-source";
 import { Setting } from "../entity/Setting";
+
+const LOGO_PATH = path.join(process.cwd(), "assets", "logo.png");
 
 const getCurrency = async () => {
   const settingRepo = AppDataSource.getRepository(Setting);
@@ -25,14 +29,23 @@ export const generateQuotationPDF = async (quotation: QuotationHeader): Promise<
     doc.on("data", buffers.push.bind(buffers));
     doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-    // Header
-    doc.fontSize(20).text(process.env.SHOP_NAME || "Jewellery Shop", { align: "center" });
-    doc.fontSize(10).text("OFFICIAL QUOTATION", { align: "center" }).moveDown();
+    // Header & Logo
+    if (fs.existsSync(LOGO_PATH)) {
+      doc.image(LOGO_PATH, 50, 45, { width: 50 });
+    }
 
-    // Info
-    doc.fontSize(12).text(`Quotation No: Q-${quotation.quotationNo.toString().padStart(5, '0')}`);
-    doc.text(`Date: ${quotation.quotationDate.toLocaleDateString()}`);
-    doc.text(`Customer: ${quotation.customerName}`).moveDown();
+    doc.fontSize(20).font('Helvetica-Bold').text(process.env.SHOP_NAME || "TITANCORE", 110, 50);
+    doc.fontSize(10).font('Helvetica').text("Luxury Jewellery & Gems", 110, 75);
+    
+    doc.fontSize(10).font('Helvetica-Bold').text("OFFICIAL QUOTATION", 400, 50, { align: 'right' });
+    doc.fontSize(10).font('Helvetica').text(`No: Q-${quotation.quotationNo.toString().padStart(5, '0')}`, 400, 65, { align: 'right' });
+    doc.text(`Date: ${quotation.quotationDate.toLocaleDateString()}`, 400, 80, { align: 'right' });
+    
+    doc.moveDown(4);
+
+    // Customer Info
+    doc.fontSize(10).font('Helvetica-Bold').text("BILL TO:");
+    doc.fontSize(12).font('Helvetica').text(quotation.customerName).moveDown();
 
     // Table Header
     const tableTop = 200;
@@ -71,15 +84,24 @@ export const generateReceiptPDF = async (receipt: ReceiptHeader): Promise<Buffer
     doc.on("data", buffers.push.bind(buffers));
     doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-    // Header
-    doc.fontSize(20).text(process.env.SHOP_NAME || "Jewellery Shop", { align: "center" });
-    doc.fontSize(10).text("OFFICIAL PAYMENT RECEIPT", { align: "center" }).moveDown();
+    // Header & Logo
+    if (fs.existsSync(LOGO_PATH)) {
+      doc.image(LOGO_PATH, 50, 45, { width: 50 });
+    }
+
+    doc.fontSize(20).font('Helvetica-Bold').text(process.env.SHOP_NAME || "TITANCORE", 110, 50);
+    doc.fontSize(10).font('Helvetica').text("Luxury Jewellery & Gems", 110, 75);
+    
+    doc.fontSize(10).font('Helvetica-Bold').text("PAYMENT RECEIPT", 400, 50, { align: 'right' });
+    doc.fontSize(10).font('Helvetica').text(`No: R-${receipt.receiptNo.toString().padStart(5, '0')}`, 400, 65, { align: 'right' });
+    doc.text(`Date: ${receipt.receiptDate.toLocaleDateString()}`, 400, 80, { align: 'right' });
+    
+    doc.moveDown(4);
 
     // Info
-    doc.fontSize(12).text(`Receipt No: R-${receipt.receiptNo.toString().padStart(5, '0')}`);
-    doc.text(`Date: ${receipt.receiptDate.toLocaleDateString()}`);
-    doc.text(`Customer: ${receipt.customerName}`);
-    doc.text(`Payment Method: ${receipt.paymentMethod}`).moveDown();
+    doc.fontSize(10).font('Helvetica-Bold').text("CUSTOMER:");
+    doc.fontSize(12).font('Helvetica').text(receipt.customerName);
+    doc.fontSize(10).text(`Payment Method: ${receipt.paymentMethod}`).moveDown();
 
     // Table Header
     const tableTop = 200;
